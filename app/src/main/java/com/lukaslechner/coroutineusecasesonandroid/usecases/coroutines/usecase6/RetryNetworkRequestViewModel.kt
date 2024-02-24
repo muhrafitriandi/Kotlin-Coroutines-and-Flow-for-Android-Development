@@ -16,7 +16,7 @@ class RetryNetworkRequestViewModel(
         uiState.value = UiState.Error("Error: ${throwable.message}")
     }
 
-    fun performNetworkRequest() {
+    fun performNetworkRequestVer1() {
         uiState.value = UiState.Loading
         val number0fRetries = 3
 
@@ -24,7 +24,7 @@ class RetryNetworkRequestViewModel(
             repeat(number0fRetries) {
                 try {
                     loadRecentAndroidVersions()
-                     return@launch // We need this to exit the coroutine if the response is successful.
+                    return@launch // We need this to exit the coroutine if the response is successful.
                     // So that when the response is successful it immediately exits the `launch` code block so that other code will not be executed.
                 } catch (e: Exception) {
                     Timber.d("${e.message}")
@@ -33,6 +33,29 @@ class RetryNetworkRequestViewModel(
             loadRecentAndroidVersions()
             Timber.d("Finished.")
         }
+    }
+
+    fun performNetworkRequest() {
+        uiState.value = UiState.Loading
+        val number0fRetries = 3
+
+        viewModelScope.launch(handler) {
+            retry(number0fRetries) {
+                loadRecentAndroidVersions()
+            }
+        }
+    }
+
+    private suspend fun <T> retry(numberOfRetries: Int, block: suspend () -> T): T {
+        repeat(numberOfRetries) {
+            try {
+                return block()
+            } catch (e: Exception) {
+                Timber.d("${e.message}")
+            }
+        }
+        Timber.d("Finished.")
+        return block()
     }
 
     private suspend fun loadRecentAndroidVersions() {
