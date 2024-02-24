@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.lukaslechner.coroutineusecasesonandroid.base.BaseViewModel
 import com.lukaslechner.coroutineusecasesonandroid.mock.MockApi
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -21,6 +22,7 @@ class RetryNetworkRequestViewModel(
         val number0fRetries = 3
 
         viewModelScope.launch(handler) {
+            // retry manually
             repeat(number0fRetries) {
                 try {
                     loadRecentAndroidVersions()
@@ -37,22 +39,45 @@ class RetryNetworkRequestViewModel(
 
     fun performNetworkRequest() {
         uiState.value = UiState.Loading
-        val number0fRetries = 3
+        val number0fRetries = 2
 
         viewModelScope.launch(handler) {
-            retry(number0fRetries) {
+            retryComplexWithExponentialBackoff(number0fRetries) {
                 loadRecentAndroidVersions()
             }
         }
     }
 
-    private suspend fun <T> retry(numberOfRetries: Int, block: suspend () -> T): T {
+    private suspend fun <T> retrySimple(numberOfRetries: Int, block: suspend () -> T): T {
         repeat(numberOfRetries) {
             try {
                 return block()
             } catch (e: Exception) {
                 Timber.d("${e.message}")
             }
+        }
+        Timber.d("Finished.")
+        return block()
+    }
+
+    private suspend fun <T> retryComplexWithExponentialBackoff(
+        numberOfRetries: Int,
+        initialDelayMillis: Long = 100,
+        maxDelayMillis: Long = 1000,
+        factor: Double = 2.0,
+        block: suspend () -> T
+    ): T {
+        var currentDelay = initialDelayMillis
+        repeat(numberOfRetries) {
+            try {
+                return block()
+            } catch (e: Exception) {
+                Timber.d("${e.message}")
+            }
+            Timber.d("Initial Delay: $currentDelay")
+            delay(currentDelay)
+            currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelayMillis)
+            Timber.d("Current Delay: $currentDelay")
         }
         Timber.d("Finished.")
         return block()
