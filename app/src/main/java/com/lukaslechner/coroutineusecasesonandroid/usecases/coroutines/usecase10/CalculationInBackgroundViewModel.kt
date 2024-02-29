@@ -2,7 +2,9 @@ package com.lukaslechner.coroutineusecasesonandroid.usecases.coroutines.usecase1
 
 import androidx.lifecycle.viewModelScope
 import com.lukaslechner.coroutineusecasesonandroid.base.BaseViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import kotlin.system.measureTimeMillis
 
@@ -11,7 +13,7 @@ class CalculationInBackgroundViewModel : BaseViewModel<UiState>() {
     fun performCalculation(factorialOf: Int) {
         uiState.value = UiState.Loading
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             var result: BigInteger
             val computationDuration = measureTimeMillis {
                 result = calculateFactorialOf(factorialOf)
@@ -22,7 +24,9 @@ class CalculationInBackgroundViewModel : BaseViewModel<UiState>() {
                 resultString = result.toString()
             }
 
-            uiState.value = UiState.Success(resultString, computationDuration, stringComputationDuration)
+            withContext(Dispatchers.Main) {
+                uiState.value = UiState.Success(resultString, computationDuration, stringComputationDuration)
+            }
         }
     }
 
