@@ -5,6 +5,8 @@ import com.lukaslechner.coroutineusecasesonandroid.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
+import timber.log.Timber
 import java.math.BigInteger
 import kotlin.system.measureTimeMillis
 
@@ -30,9 +32,13 @@ class CalculationInBackgroundViewModel : BaseViewModel<UiState>() {
         }
     }
 
-    private fun calculateFactorialOf(number: Int) = (1..number).fold(
-        BigInteger.ONE
-    ) { acc, i ->
-        acc.multiply(BigInteger.valueOf(i.toLong()))
+    private suspend fun calculateFactorialOf(number: Int): BigInteger {
+        var factorial = BigInteger.ONE
+        for (i in 1..number) {
+            yield()
+            factorial = factorial.multiply(BigInteger.valueOf(i.toLong()))
+        }
+        Timber.d("Calculating Factorial Completed!")
+        return factorial
     }
 }
