@@ -4,13 +4,15 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 
 fun main() {
-    handlingLaunch()
-    handlingAsync()
-    handlingAsyncAwait()
+//    handlingLaunch()
+//    handlingAsync()
+//    handlingAsyncAwait()
     handlingChildAsync()
 }
 
@@ -71,9 +73,24 @@ fun handlingChildAsync() {
     val scope = CoroutineScope(Job() + exceptionHandler)
 
     scope.launch {
-        async {
-            delay(200)
-            throw RuntimeException()
+        supervisorScope {
+            val a = async {
+                delay(200)
+                throw RuntimeException()
+            }
+            val b = async {
+                delay(300)
+                println("This is B")
+            }
+
+            listOf(a, b).mapNotNull {
+                try {
+                    it.await()
+                } catch (e: Exception) {
+                    println("Caught: $e")
+                    null
+                }
+            }
         }
     }
 
