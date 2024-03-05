@@ -54,6 +54,9 @@ class ExceptionHandlingViewModel(
                         try {
                             it.await()
                         } catch (e: Exception) {
+                            if (e is CancellationException) {
+                                throw e
+                            }
                             Timber.d("Error loading features data!")
                             null
                         }
