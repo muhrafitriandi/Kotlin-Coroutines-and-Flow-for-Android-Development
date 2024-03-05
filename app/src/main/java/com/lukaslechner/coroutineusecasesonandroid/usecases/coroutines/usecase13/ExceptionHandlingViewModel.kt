@@ -25,7 +25,14 @@ class ExceptionHandlingViewModel(
     }
 
     fun handleWithCoroutineExceptionHandler() {
-        
+        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+            uiState.value = UiState.Error(throwable.message.toString())
+            Timber.d("Caught exception: ${throwable.message}")
+        }
+
+        viewModelScope.launch(exceptionHandler) {
+            api.getAndroidVersionFeatures(27)
+        }
     }
 
     fun showResultsEvenIfChildCoroutineFails() {
