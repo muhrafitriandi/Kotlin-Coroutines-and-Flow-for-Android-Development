@@ -7,9 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -40,6 +38,35 @@ class PerformSingleNetworkRequestViewModelTest {
             listOf(
                 UiState.Loading,
                 UiState.Success(mockAndroidVersions)
+            ),
+            receivedUiState
+        )
+
+        Dispatchers.resetMain()
+        dispatcher.cleanupTestCoroutines()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `should return Error when network is fails`() {
+        // Arrange
+        val dispatcher = TestCoroutineDispatcher()
+        Dispatchers.setMain(dispatcher)
+
+        val fakeApi = FakeErrorApi()
+        val viewModel = PerformSingleNetworkRequestViewModel(fakeApi)
+
+        observeViewModel(viewModel)
+
+        // Act
+        viewModel.performSingleNetworkRequest()
+
+        // Assert
+        val expectedErrorState = receivedUiState.find { it is UiState.Error } as UiState.Error
+        Assert.assertEquals(
+            listOf(
+                UiState.Loading,
+                UiState.Error(expectedErrorState.message)
             ),
             receivedUiState
         )
