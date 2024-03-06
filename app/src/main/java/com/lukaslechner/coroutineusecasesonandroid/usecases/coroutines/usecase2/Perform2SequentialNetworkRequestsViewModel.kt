@@ -18,7 +18,7 @@ class Perform2SequentialNetworkRequestsViewModel(
         Timber.d("3. Running on thread: ${Thread.currentThread().name}")
         viewModelScope.launch(Dispatchers.Main) {
             Timber.d("4. Running on thread: ${Thread.currentThread().name}")
-            uiState.value = UiState.Error("Error: ${throwable.message.toString()}")
+            uiState.value = UiState.Error("Error: ${throwable.message}")
         }
     }
 
@@ -29,7 +29,7 @@ class Perform2SequentialNetworkRequestsViewModel(
         // switch to branch "coroutine_course_full" to see solution
         uiState.value = UiState.Loading
 
-        job = viewModelScope.launch(exceptionHandler + Dispatchers.IO) {
+        job = viewModelScope.launch(exceptionHandler) {
             Timber.d("1. Running on thread: ${Thread.currentThread().name}")
             val androidVersion = mockApi.getRecentAndroidVersions().last()
             val versionFeatures = mockApi.getAndroidVersionFeatures(androidVersion.apiLevel)
