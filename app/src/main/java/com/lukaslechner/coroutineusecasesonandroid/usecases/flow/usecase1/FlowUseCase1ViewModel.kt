@@ -17,6 +17,7 @@ class FlowUseCase1ViewModel(
         viewModelScope.launch {
             stockPriceDataSource.latestStockList.collect { stockList ->
                 Timber.d("Received item: ${stockList.first()}")
+                uiState.value = UiState.Success(stockList)
             }
         }
     }
