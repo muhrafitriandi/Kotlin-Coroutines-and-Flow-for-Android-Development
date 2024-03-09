@@ -25,7 +25,7 @@ class FlowUseCase1Activity : BaseActivity() {
         setContentView(binding.root)
         binding.recyclerView.adapter = adapter
 
-        viewModel.uiState().observe(this) { uiState ->
+        viewModel.currentStockPriceAsLiveData.observe(this) { uiState ->
             if (uiState != null) {
                 render(uiState)
             }
