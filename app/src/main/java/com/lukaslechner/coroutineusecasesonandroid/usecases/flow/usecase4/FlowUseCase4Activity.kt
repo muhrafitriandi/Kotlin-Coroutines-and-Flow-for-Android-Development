@@ -2,6 +2,8 @@ package com.lukaslechner.coroutineusecasesonandroid.usecases.flow.usecase4
 
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.lukaslechner.coroutineusecasesonandroid.base.BaseActivity
 import com.lukaslechner.coroutineusecasesonandroid.base.flowUseCase4Description
@@ -11,7 +13,6 @@ import com.lukaslechner.coroutineusecasesonandroid.utils.setVisible
 import com.lukaslechner.coroutineusecasesonandroid.utils.toast
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.joda.time.LocalDateTime
 import org.joda.time.format.DateTimeFormat
 
@@ -28,10 +29,13 @@ class FlowUseCase4Activity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         binding.recyclerView.adapter = adapter
-        
-        viewModel.currentStockPriceAsFlow.onEach { uiState ->
-            render(uiState)
-        }.launchIn(lifecycleScope)
+
+        viewModel.currentStockPriceAsFlow
+            .onEach { uiState ->
+                render(uiState)
+            }
+            .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+            .launchIn(lifecycleScope)
     }
 
     private fun render(uiState: UiState) {
@@ -40,6 +44,7 @@ class FlowUseCase4Activity : BaseActivity() {
                 binding.progressBar.setVisible()
                 binding.recyclerView.setGone()
             }
+
             is UiState.Success -> {
                 binding.recyclerView.setVisible()
                 binding.lastUpdateTime.text =
@@ -47,6 +52,7 @@ class FlowUseCase4Activity : BaseActivity() {
                 adapter.stockList = uiState.stockList
                 binding.progressBar.setGone()
             }
+
             is UiState.Error -> {
                 toast(uiState.message)
                 binding.progressBar.setGone()
