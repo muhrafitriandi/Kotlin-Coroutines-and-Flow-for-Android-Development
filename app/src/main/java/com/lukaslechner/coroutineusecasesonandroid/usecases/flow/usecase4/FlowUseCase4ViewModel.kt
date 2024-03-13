@@ -8,26 +8,43 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import timber.log.Timber
 
 class FlowUseCase4ViewModel(
     stockPriceDataSource: StockPriceDataSource
 ) : BaseViewModel<UiState>() {
 
+    // Using StateFlow
     val currentStockPriceAsFlow: Flow<UiState> = stockPriceDataSource
         .latestStockList
         .map { stockList ->
             UiState.Success(stockList) as UiState
         }
-        .onStart {
-            emit(UiState.Loading)
-        }
         .onCompletion {
             Timber.tag("Flow").d("Flow has completed.")
         }
-        .shareIn(
+        .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-            replay = 1
+            initialValue = UiState.Loading
         )
+
+    // Using SharedFlow
+//    val currentStockPriceAsFlow: Flow<UiState> = stockPriceDataSource
+//        .latestStockList
+//        .map { stockList ->
+//            UiState.Success(stockList) as UiState
+//        }
+//        .onStart {
+//            emit(UiState.Loading)
+//        }
+//        .onCompletion {
+//            Timber.tag("Flow").d("Flow has completed.")
+//        }
+//        .shareIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
+//            replay = 1
+//        )
 }
